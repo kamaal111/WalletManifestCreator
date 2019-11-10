@@ -17,38 +17,29 @@ type Manifest struct {
 	Icon2x string `json:"icon@2x.png"`
 }
 
+func hashItem(filepath string) string {
+	file, fileError := os.Open(filepath)
+
+	if fileError != nil {
+		panic(fileError.Error())
+	}
+
+	defer file.Close()
+
+	hasher := sha1.New()
+
+	if _, hasherError := io.Copy(hasher, file); hasherError != nil {
+		log.Fatal(hasherError)
+	}
+
+	fmt.Println("Hashed" + filepath)
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
 func main() {
-	icon, iconError := os.Open("icon.png")
-	icon2x, icon2xError := os.Open("icon@2x.png")
-
-	if iconError != nil {
-		panic(iconError.Error())
-	}
-	if icon2xError != nil {
-		panic(icon2xError.Error())
-	}
-
-	defer icon.Close()
-	defer icon2x.Close()
-
-	hashIcon := sha1.New()
-	hashIcon2x := sha1.New()
-
-	if _, hashIconError := io.Copy(hashIcon, icon2x); hashIconError != nil {
-		log.Fatal(hashIconError)
-	}
-	if _, hashIcon2xError := io.Copy(hashIcon2x, icon2x); hashIcon2xError != nil {
-		log.Fatal(hashIcon2xError)
-	}
-
-	finalIconHash := hex.EncodeToString(hashIcon2x.Sum(nil))
-	fmt.Println("Hashed icon.png")
-	finalIcon2xHash := hex.EncodeToString(hashIcon2x.Sum(nil))
-	fmt.Println("Hashed icon@2x.png")
-
 	data := Manifest{
-		Icon:   finalIconHash,
-		Icon2x: finalIcon2xHash,
+		Icon:   hashItem("icon.png"),
+		Icon2x: hashItem("icon@2x.png"),
 	}
 
 	manifest, _ := json.MarshalIndent(data, "", " ")
