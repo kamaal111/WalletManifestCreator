@@ -49,34 +49,41 @@ func HashFiles(assetsDirectory string, logging bool) (types.Manifest, error) {
 	}
 
 	for _, file := range dirFiles {
-		fileHash, err := hashItem(files.AppendFileToPath(assetsDirectory, file.Name()), logging)
+		if file.IsDir() {
+			continue
+		}
+
+		filePath := files.AppendFileToPath(assetsDirectory, file.Name())
+
+		fileHash, err := hashItem(filePath, logging)
 		if err != nil {
 			return data, err
 		}
-		switch file.Name() {
-		case "icon.png":
+
+		switch filePath {
+		case files.AppendFileToPath(assetsDirectory, "icon.png"):
 			data.Icon = fileHash
-		case "icon@2x.png":
+		case files.AppendFileToPath(assetsDirectory, "icon@2x.png"):
 			data.Icon2x = fileHash
-		case "background.png":
+		case files.AppendFileToPath(assetsDirectory, "background.png"):
 			data.Background = fileHash
-		case "background@2x.png":
+		case files.AppendFileToPath(assetsDirectory, "background@2x.png"):
 			data.Background2x = fileHash
-		case "logo.png":
+		case files.AppendFileToPath(assetsDirectory, "logo.png"):
 			data.Logo = fileHash
-		case "logo@2x.png":
+		case files.AppendFileToPath(assetsDirectory, "logo@2x.png"):
 			data.Logo2x = fileHash
-		case "footer.png":
+		case files.AppendFileToPath(assetsDirectory, "footer.png"):
 			data.Footer = fileHash
-		case "footer@2x.png":
+		case files.AppendFileToPath(assetsDirectory, "footer@2x.png"):
 			data.Footer2x = fileHash
-		case "strip.png":
+		case files.AppendFileToPath(assetsDirectory, "strip.png"):
 			data.Strip = fileHash
-		case "strip@2x.png":
+		case files.AppendFileToPath(assetsDirectory, "strip@2x.png"):
 			data.Strip2x = fileHash
-		case "thumbnail.png":
+		case files.AppendFileToPath(assetsDirectory, "thumbnail.png"):
 			data.Thumbnail = fileHash
-		case "thumbnail@2x.png":
+		case files.AppendFileToPath(assetsDirectory, "thumbnail@2x.png"):
 			data.Thumbnail2x = fileHash
 		}
 	}
