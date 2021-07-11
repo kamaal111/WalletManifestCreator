@@ -49,7 +49,7 @@ func HashFiles(assetsDirectory string, logging bool) (types.Manifest, error) {
 	}
 
 	for _, file := range dirFiles {
-		fileHash, err := hashItem(file.Name(), logging)
+		fileHash, err := hashItem(files.AppendFileToPath(assetsDirectory, file.Name()), logging)
 		if err != nil {
 			return data, err
 		}
