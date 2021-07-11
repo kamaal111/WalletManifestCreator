@@ -3,69 +3,83 @@ package hasher
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/kamaal111/WalletManifestCreator/types"
+	"github.com/kamaal111/kamaal-go-utils/files"
 )
 
-func hashItem(filepath string) string {
-	file, fileError := os.Open(filepath)
-	if fileError != nil {
-		panic(fileError.Error())
+func hashItem(filepath string, logging bool) (string, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return "", err
 	}
 	defer file.Close()
 
 	hasher := sha1.New()
-	if _, hasherError := io.Copy(hasher, file); hasherError != nil {
-		panic(hasherError.Error())
+	_, err = io.Copy(hasher, file)
+	if err != nil {
+		return "", err
 	}
 
-	fmt.Println("Hashed " + filepath)
-	return hex.EncodeToString(hasher.Sum(nil))
+	if logging {
+		log.Printf("hashed %s\n", filepath)
+	}
+
+	return hex.EncodeToString(hasher.Sum(nil)), err
 }
 
-// HashFiles returns a struct of all the necessary hashed values
-func HashFiles() types.Manifest {
-	data := types.Manifest{
-		Pass: hashItem("pass.json"),
+// HashFiles returns a struct of all the necessary hashed values or throws an error if something wrong
+func HashFiles(assetsDirectory string, logging bool) (types.Manifest, error) {
+	data := types.Manifest{}
+
+	passHash, err := hashItem(files.AppendFileToPath(assetsDirectory, "pass.json"), logging)
+	if err != nil {
+		return data, err
 	}
 
-	files, filesError := ioutil.ReadDir("./")
-	if filesError != nil {
-		panic(filesError.Error())
+	data.Pass = passHash
+
+	dirFiles, err := ioutil.ReadDir(assetsDirectory)
+	if err != nil {
+		return data, err
 	}
 
-	for _, file := range files {
+	for _, file := range dirFiles {
+		fileHash, err := hashItem(file.Name(), logging)
+		if err != nil {
+			return data, err
+		}
 		switch file.Name() {
 		case "icon.png":
-			data.Icon = hashItem(file.Name())
+			data.Icon = fileHash
 		case "icon@2x.png":
-			data.Icon2x = hashItem(file.Name())
+			data.Icon2x = fileHash
 		case "background.png":
-			data.Background = hashItem(file.Name())
+			data.Background = fileHash
 		case "background@2x.png":
-			data.Background2x = hashItem(file.Name())
+			data.Background2x = fileHash
 		case "logo.png":
-			data.Logo = hashItem(file.Name())
+			data.Logo = fileHash
 		case "logo@2x.png":
-			data.Logo2x = hashItem(file.Name())
+			data.Logo2x = fileHash
 		case "footer.png":
-			data.Footer = hashItem(file.Name())
+			data.Footer = fileHash
 		case "footer@2x.png":
-			data.Footer2x = hashItem(file.Name())
+			data.Footer2x = fileHash
 		case "strip.png":
-			data.Strip = hashItem(file.Name())
+			data.Strip = fileHash
 		case "strip@2x.png":
-			data.Strip2x = hashItem(file.Name())
+			data.Strip2x = fileHash
 		case "thumbnail.png":
-			data.Thumbnail = hashItem(file.Name())
+			data.Thumbnail = fileHash
 		case "thumbnail@2x.png":
-			data.Thumbnail2x = hashItem(file.Name())
+			data.Thumbnail2x = fileHash
 		}
 	}
 
-	return data
+	return data, nil
 }
